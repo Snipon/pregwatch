@@ -1,0 +1,11 @@
+.arrival {
+  text-align: center;
+  display: inline-block;
+  position: relative;
+  z-index: 100;
+
+  &__title {
+    font-weight: normal;
+    margin: 0;
+  }
+}

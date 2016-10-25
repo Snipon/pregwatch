@@ -7,7 +7,7 @@ class App extends React.Component {
     return (
       <div className="arrival">
         <h1 className="arrival__title">Time to arrival</h1>
-        <Progress />
+        <Progress concieved="2016-06-26" totalWeeks="40" size="300"/>
       </div>
     );
   }
