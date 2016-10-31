@@ -7,7 +7,6 @@ var browserify = require('browserify');
 var connect = require('gulp-connect');
 var gulp = require('gulp');
 var gutil = require('gulp-util');
-var notify = require('gulp-notify');
 var sass = require('gulp-sass');
 var source = require('vinyl-source-stream');
 var sourcemaps = require('gulp-sourcemaps');
@@ -24,7 +23,8 @@ var sassOptions = {
 gulp.task('connect', function() {
   connect.server({
     livereload: true,
-    https: false
+    https: false,
+    port: 3000
   });
 });
 
@@ -33,7 +33,6 @@ gulp.task('app', function () {
   process.env.NODE_ENV = 'production';
   return browserify('./src/jsx/index.jsx')
     .transform('babelify', {presets: ['es2015', 'react']})
-    .transform('envify')
     .bundle()
     .on('error', gutil.log)
     .pipe(source('bundle.js'))
