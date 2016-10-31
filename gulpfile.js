@@ -14,11 +14,6 @@ var npm = require('./package.json');
 var buffer = require('vinyl-buffer');
 var uglify = require('gulp-uglify');
 
-var sassOptions = {
-  includePaths: require('node-neat').includePaths,
-  outputStyle: argv.production ? 'compressed' : 'expanded'
-};
-
 // Web server.
 gulp.task('connect', function() {
   connect.server({
@@ -30,7 +25,9 @@ gulp.task('connect', function() {
 
 // App builder.
 gulp.task('app', function () {
-  process.env.NODE_ENV = 'production';
+  if (argv.production) {
+    process.env.NODE_ENV = 'production';
+  }
   return browserify('./src/jsx/index.jsx')
     .transform('babelify', {presets: ['es2015', 'react']})
     .bundle()
@@ -46,7 +43,10 @@ gulp.task('app', function () {
 gulp.task('sass', function () {
   return gulp.src(npm.paths.scss)
     .pipe(sourcemaps.init())
-    .pipe(sass(sassOptions))
+    .pipe(sass({
+      includePaths: require('node-neat').includePaths,
+      outputStyle: argv.production ? 'compressed' : 'expanded'
+    }))
     .on('error', sass.logError)
     .pipe(autoprefixer({
       browsers: ['last 4 versions'],
