@@ -4,12 +4,14 @@ body {
 
 .page {
   align-items: center;
-  background-color: rgb(60, 60, 60);
-  color: rgba(240, 240, 240, 0.8);
+  background-color: $bgColor;
+  background-size: cover;
+  color: $fgColor;
   display: flex;
   font-family: 'Indie Flower', sans-serif;
   height: 100vh;
   justify-content: center;
   margin: 0;
   width: 100vw;
+  hest: $ko;
 }

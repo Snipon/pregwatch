@@ -1,31 +1,73 @@
-const gulp = require('gulp');
-const notify = require('gulp-notify');
-const sass = require('gulp-sass');
-const autoprefixer = require('gulp-autoprefixer');
-const sourcemaps = require('gulp-sourcemaps');
+'use strict';
+
+var argv = require('yargs').argv;
+var gulpif = require('gulp-if');
+var autoprefixer = require('gulp-autoprefixer');
+var browserify = require('browserify');
+var connect = require('gulp-connect');
+var gulp = require('gulp');
+var gutil = require('gulp-util');
+var notify = require('gulp-notify');
+var sass = require('gulp-sass');
+var source = require('vinyl-source-stream');
+var sourcemaps = require('gulp-sourcemaps');
+var npm = require('./package.json');
+var buffer = require('vinyl-buffer');
+var uglify = require('gulp-uglify');
+
+var sassOptions = {
+  includePaths: require('node-neat').includePaths,
+  outputStyle: argv.production ? 'compressed' : 'expanded'
+};
+
+// Web server.
+gulp.task('connect', function() {
+  connect.server({
+    livereload: true,
+    https: false
+  });
+});
+
+// App builder.
+gulp.task('app', function () {
+  process.env.NODE_ENV = 'production';
+  return browserify('./src/jsx/index.jsx')
+    .transform('babelify', {presets: ['es2015', 'react']})
+    .transform('envify')
+    .bundle()
+    .on('error', gutil.log)
+    .pipe(source('bundle.js'))
+    .pipe(gulpif(argv.production, buffer()))
+    .pipe(gulpif(argv.production, uglify()))
+    .pipe(gulp.dest(npm.dest.js))
+    .pipe(connect.reload());
+});
 
 // Sass.
 gulp.task('sass', function () {
-  return gulp.src('src/sass/*.scss')
+  return gulp.src(npm.paths.scss)
     .pipe(sourcemaps.init())
-    .pipe(sass({
-      includePaths: require('node-neat').includePaths,
-      outputStyle: 'expanded'
-    }).on('error', notify.onError(function (error) {
-      return 'SASS error: ' + error.message;
-    })))
+    .pipe(sass(sassOptions))
+    .on('error', sass.logError)
     .pipe(autoprefixer({
       browsers: ['last 4 versions'],
       cascade: false
     }))
-    .pipe(sourcemaps.write('sourcemaps'))
-    .pipe(gulp.dest('public/css'));
+    .pipe(gulpif(!argv.production, sourcemaps.write('sourcemaps')))
+    .pipe(gulp.dest(npm.dest.css))
+    .pipe(gulpif(!argv.production, connect.reload()));
+});
+
+// JSX watch.
+gulp.task('app:watch', ['app'], function () {
+  gulp.watch(npm.paths.jsx, ['app']);
 });
 
 // Sass watch.
 gulp.task('sass:watch', function () {
-  gulp.watch('src/sass/**/*.scss', ['sass']);
+  gulp.watch(npm.paths.scss, ['sass']);
 });
 
 // Register workers.
-gulp.task('default', ['sass', 'sass:watch']);
+gulp.task('default', ['sass', 'app', 'sass:watch', 'app:watch', 'connect']);
+gulp.task('build', ['app', 'sass']);
